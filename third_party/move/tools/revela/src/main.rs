@@ -78,6 +78,9 @@ fn main() {
             disable_optimize_variables_declaration: args.disable_variable_declaration_optimization,
         },
     );
+    eprintln!("DEBUG: About to call decompiler.decompile()");
     let output = decompiler.decompile().expect("Error: unable to decompile");
+    eprintln!("DEBUG: decompiler.decompile() completed");
+    eprintln!("DEBUG: Output length: {}", output.len());
     println!("{}", output);
 }

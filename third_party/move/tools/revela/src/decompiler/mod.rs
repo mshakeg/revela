@@ -394,6 +394,7 @@ impl<'a> Decompiler<'a> {
     }
 
     pub fn decompile(&mut self) -> Result<String> {
+        eprintln!("DEBUG: decompile method called - THIS SHOULD DEFINITELY APPEAR");
         let mut pipeline = FunctionTargetPipeline::default();
         pipeline.set_max_loop(32);
         pipeline.add_processor(PeepHoleProcessor::new(32));
@@ -410,17 +411,23 @@ impl<'a> Decompiler<'a> {
         // all module must be populated before decompiling
         for binary in &self.binaries {
             match binary {
-                BinaryIndexedView::Module(compiled) => self.env.attach_compiled_module(
-                    self.module_for_binary(&binary).get_id(),
-                    (*compiled).clone(),
-                    SourceMap::new(bin_to_compiler_translator::fake_loc(), None),
-                ),
+                BinaryIndexedView::Module(compiled) => {
+                    eprintln!("DEBUG: Calling attach_compiled_module for module");
+                    self.env.attach_compiled_module(
+                        self.module_for_binary(&binary).get_id(),
+                        (*compiled).clone(),
+                        SourceMap::new(bin_to_compiler_translator::fake_loc(), None),
+                    );
+                },
 
-                BinaryIndexedView::Script(compiled) => self.env.attach_compiled_module(
-                    self.module_for_binary(&binary).get_id(),
-                    bin_to_compiler_translator::script_into_module((*compiled).clone()),
-                    SourceMap::new(bin_to_compiler_translator::fake_loc(), None),
-                ),
+                BinaryIndexedView::Script(compiled) => {
+                    eprintln!("DEBUG: Calling attach_compiled_module for script");
+                    self.env.attach_compiled_module(
+                        self.module_for_binary(&binary).get_id(),
+                        bin_to_compiler_translator::script_into_module((*compiled).clone()),
+                        SourceMap::new(bin_to_compiler_translator::fake_loc(), None),
+                    );
+                },
             };
         }
 
@@ -428,6 +435,7 @@ impl<'a> Decompiler<'a> {
 
         // decompile
         for binary in self.binaries.clone() {
+            eprintln!("DEBUG: Processing binary in decompile loop");
             let module = self.module_for_binary(&binary);
             let version = binary.version();
 
@@ -453,12 +461,19 @@ impl<'a> Decompiler<'a> {
                 self.inline_decompile_type(&module, t, naming).unwrap()
             });
 
-            let friend_modules_set = module.get_friend_modules();
-            for friend_module in friend_modules_set.iter() {
-                let mut friend_unit = SourceCodeUnit::new(1);
-                let friend_name = self.env.get_module(*friend_module).get_full_name_str();
-                friend_unit.add_line(format!("friend {};", friend_name));
-                result.add_block(friend_unit);
+            if let Some(friend_decls) = binary.friend_decls() {
+                eprintln!("DEBUG: Processing friend declarations, found {} friend_decls", friend_decls.len());
+                for friend_handle in friend_decls {
+                    let friend_address = binary.address_identifier_at(friend_handle.address);
+                    let friend_name = binary.identifier_at(friend_handle.name);
+                    eprintln!("DEBUG: Adding friend declaration: {}::{}", friend_address, friend_name);
+                    
+                    let mut friend_unit = SourceCodeUnit::new(1);
+                    friend_unit.add_line(format!("friend {}::{};", friend_address, friend_name));
+                    result.add_block(friend_unit);
+                }
+            } else {
+                eprintln!("DEBUG: No friend declarations found for this binary");
             }
 
             if let Some(defs) = binary.struct_defs() {
