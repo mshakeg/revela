@@ -78,7 +78,6 @@ pub fn dummy_function_data(name: Symbol) -> FunctionData {
 }
 
 pub fn run_stackless_compiler(env: &mut GlobalEnv, program: Program) {
-    eprintln!("DEBUG: run_stackless_compiler called");
     env.add_source(FileHash::empty(), Rc::new(BTreeMap::new()), "", "", false);
     (env.file_hash_map).insert(
         FileHash::empty(),
@@ -119,30 +118,20 @@ pub fn run_stackless_compiler(env: &mut GlobalEnv, program: Program) {
     }
 
     let module_table = std::mem::take(&mut builder.module_table);
-    eprintln!("DEBUG: Module table contains {} modules", module_table.len());
-    for (name, id) in &module_table {
-        eprintln!("DEBUG: Module table entry: {:?} -> {:?}", name, id);
-    }
     
     for module in env.module_data.iter_mut() {
         let mut friend_modules = std::collections::BTreeSet::new();
-        eprintln!("DEBUG: Processing module with {} friend declarations", module.friend_decls.len());
         for friend_decl in module.friend_decls.iter_mut() {
-            eprintln!("DEBUG: Looking for friend module: {:?}", friend_decl.module_name);
             if let Some(friend_mod_id) = module_table.get(&friend_decl.module_name) {
-                eprintln!("DEBUG: Found friend module ID: {:?}", friend_mod_id);
                 friend_decl.module_id = Some(*friend_mod_id);
                 friend_modules.insert(*friend_mod_id);
             } else {
-                eprintln!("DEBUG: Friend module not found in module table: {:?}", friend_decl.module_name);
                 let dummy_id = ModuleId::new(999999);
                 friend_decl.module_id = Some(dummy_id);
                 friend_modules.insert(dummy_id);
-                eprintln!("DEBUG: Assigned dummy module ID: {:?}", dummy_id);
             }
         }
         module.friend_modules = friend_modules;
-        eprintln!("DEBUG: Module now has {} friend modules", module.friend_modules.len());
     }
 
     for module in env.module_data.iter_mut() {
