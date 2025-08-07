@@ -458,8 +458,25 @@ impl<'a> Decompiler<'a> {
                     let friend_address = binary.address_identifier_at(friend_handle.address);
                     let friend_name = binary.identifier_at(friend_handle.name);
                     
+                    let friend_address_str = format!("{}", friend_address);
+                    let formatted_address = if friend_address_str.len() > 10 && friend_address_str.starts_with("0x") {
+                        let addr_bytes = &friend_address_str[2..];
+                        if addr_bytes.len() == 64 {
+                            let trimmed = addr_bytes.trim_start_matches('0');
+                            if trimmed.is_empty() {
+                                "0x0".to_string()
+                            } else {
+                                format!("0x{}", trimmed)
+                            }
+                        } else {
+                            friend_address_str.to_string()
+                        }
+                    } else {
+                        friend_address_str.to_string()
+                    };
+                    
                     let mut friend_unit = SourceCodeUnit::new(1);
-                    friend_unit.add_line(format!("    friend {}::{};", friend_address, friend_name));
+                    friend_unit.add_line(format!("    friend {}::{};", formatted_address, friend_name));
                     result.add_block(friend_unit);
                 }
             }

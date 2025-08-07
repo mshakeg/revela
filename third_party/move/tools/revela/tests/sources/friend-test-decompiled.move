@@ -1,5 +1,5 @@
 module 0xbadbadbad::FriendTestModule {
-        friend 0x0000000000000000000000000000000000000000000000000000000badbadbad::FriendHelper;
+        friend 0xbadbadbad::FriendHelper;
     public(friend) fun friend_only_function() : u64 {
         42
     }
@@ -17,4 +17,3 @@ module 0xbadbadbad::FriendHelper {
     
     // decompiled from Move bytecode v6
 }
-

@@ -8,7 +8,7 @@ mod test {
 
     use super::utils;
     use move_compiler::Flags;
-    use revela::decompiler::{Decompiler, OptimizerSettings};
+    use revela::decompiler::Decompiler;
 
     pub fn decompile_compile_decompile_match_single_file(
         path: &Path,
@@ -40,6 +40,7 @@ mod test {
 
         utils::tmp_project(vec![("tmp.move", source.as_str())], |tmp_files| {
             (src_scripts, src_modules) = utils::run_compiler(tmp_files, Flags::empty(), false);
+            
 
             {
                 let binaries = utils::into_binary_indexed_view(&src_scripts, &src_modules);
@@ -52,13 +53,7 @@ mod test {
             }
             {
                 let binaries = utils::into_binary_indexed_view(&src_scripts, &src_modules);
-                let mut decompiler = Decompiler::new(
-                    binaries,
-                    OptimizerSettings {
-                        // this settings may cause the output to be different
-                        disable_optimize_variables_declaration: true,
-                    },
-                );
+                let mut decompiler = Decompiler::new(binaries, Default::default());
                 output = decompiler.decompile().expect("Unable to decompile");
             }
         });
@@ -73,19 +68,17 @@ mod test {
             panic!("Unable to read expected output file");
         }
 
+        
         utils::tmp_project(vec![("tmp.move", output.as_str())], |tmp_files| {
             let (scripts, modules) = utils::run_compiler(tmp_files, Flags::empty(), false);
+            
 
             let binaries = utils::into_binary_indexed_view(&scripts, &modules);
 
-            let mut decompiler = Decompiler::new(
-                binaries,
-                OptimizerSettings {
-                    disable_optimize_variables_declaration: true,
-                },
-            );
+            let mut decompiler = Decompiler::new(binaries, Default::default());
 
             let output2 = decompiler.decompile().expect("Unable to decompile");
+            
 
             utils::assert_same_source(&output, &output2);
         });
