@@ -453,9 +453,11 @@ impl<'a> Decompiler<'a> {
                 self.inline_decompile_type(&module, t, naming).unwrap()
             });
 
-            for friend_module in module.get_friend_modules() {
+            let friend_modules_set = module.get_friend_modules();
+            for friend_module in friend_modules_set.iter() {
                 let mut friend_unit = SourceCodeUnit::new(1);
-                friend_unit.add_line(format!("friend {};", friend_module.display_full(&self.env)));
+                let friend_name = self.env.get_module(*friend_module).get_full_name_str();
+                friend_unit.add_line(format!("friend {};", friend_name));
                 result.add_block(friend_unit);
             }
 
