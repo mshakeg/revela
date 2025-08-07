@@ -1446,9 +1446,7 @@ impl GlobalEnv {
         }
 
         let used_modules = self.get_used_modules_from_bytecode(&module);
-        eprintln!("DEBUG: attach_compiled_module calling get_friend_modules_from_bytecode");
         let friend_modules = self.get_friend_modules_from_bytecode(&module);
-        eprintln!("DEBUG: attach_compiled_module got {} friend modules", friend_modules.len());
         let mod_data = &mut self.module_data[module_id.0 as usize];
         mod_data.used_modules = used_modules;
         mod_data.friend_modules = friend_modules;
@@ -1503,24 +1501,13 @@ impl GlobalEnv {
         &self,
         compiled_module: &CompiledModule,
     ) -> BTreeSet<ModuleId> {
-        eprintln!("DEBUG: get_friend_modules_from_bytecode called with {} friend declarations", compiled_module.friend_decls.len());
-        let result: BTreeSet<ModuleId> = compiled_module
+        compiled_module
             .immediate_friends()
             .into_iter()
-            .map(|storage_id| {
-                let name = self.to_module_name(&storage_id);
-                eprintln!("DEBUG: Processing friend module name: {:?}", name);
-                name
-            })
-            .flat_map(|name| {
-                let found = self.find_module(&name);
-                eprintln!("DEBUG: find_module result for {:?}: {:?}", name, found.is_some());
-                found
-            })
+            .map(|storage_id| self.to_module_name(&storage_id))
+            .flat_map(|name| self.find_module(&name))
             .map(|module_env| module_env.get_id())
-            .collect();
-        eprintln!("DEBUG: get_friend_modules_from_bytecode returning {} modules", result.len());
-        result
+            .collect()
     }
 
     /// Return the name of the ghost memory associated with spec var.
