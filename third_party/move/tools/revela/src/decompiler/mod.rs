@@ -453,6 +453,12 @@ impl<'a> Decompiler<'a> {
                 self.inline_decompile_type(&module, t, naming).unwrap()
             });
 
+            for friend_module in module.get_friend_modules() {
+                let mut friend_unit = SourceCodeUnit::new(1);
+                friend_unit.add_line(format!("friend {};", friend_module.display_full(&self.env)));
+                result.add_block(friend_unit);
+            }
+
             if let Some(defs) = binary.struct_defs() {
                 for idx in 0..defs.len() {
                     let s_idx = move_binary_format::file_format::StructDefinitionIndex(idx as u16);
