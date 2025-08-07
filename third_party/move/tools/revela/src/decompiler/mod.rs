@@ -42,7 +42,7 @@ use self::naming::Naming;
 
 pub struct Decompiler<'a> {
     env: GlobalEnv,
-    binaries: Vec<BinaryIndexedView<'a>>,
+    pub binaries: Vec<BinaryIndexedView<'a>>,
     optimizer_settings: OptimizerSettings,
 }
 

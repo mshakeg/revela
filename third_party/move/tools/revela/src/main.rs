@@ -79,8 +79,32 @@ fn main() {
         },
     );
     eprintln!("DEBUG: About to call decompiler.decompile()");
-    let output = decompiler.decompile().expect("Error: unable to decompile");
+    let mut output = decompiler.decompile().expect("Error: unable to decompile");
     eprintln!("DEBUG: decompiler.decompile() completed");
     eprintln!("DEBUG: Output length: {}", output.len());
+    
+    for binary in &decompiler.binaries {
+        if let Some(friend_decls) = binary.friend_decls() {
+            if !friend_decls.is_empty() {
+                eprintln!("DEBUG: Adding {} friend declarations to output", friend_decls.len());
+                let mut friend_lines = Vec::new();
+                for friend_handle in friend_decls {
+                    let friend_address = binary.address_identifier_at(friend_handle.address);
+                    let friend_name = binary.identifier_at(friend_handle.name);
+                    friend_lines.push(format!("    friend {}::{};", friend_address, friend_name));
+                }
+                
+                if let Some(module_start) = output.find("module ") {
+                    if let Some(brace_pos) = output[module_start..].find(" {") {
+                        let insert_pos = module_start + brace_pos + 2;
+                        let friend_block = format!("\n{}\n", friend_lines.join("\n"));
+                        output.insert_str(insert_pos, &friend_block);
+                        eprintln!("DEBUG: Inserted friend declarations into output");
+                    }
+                }
+            }
+        }
+    }
+    
     println!("{}", output);
 }
