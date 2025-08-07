@@ -1,5 +1,5 @@
-module NamedAddr::FriendTestModule {
-    friend NamedAddr::FriendHelper;
+module 0xbadbadbad::FriendTestModule {
+    friend 0xbadbadbad::FriendHelper;
     
     public(friend) fun friend_only_function(): u64 {
         42
@@ -10,10 +10,8 @@ module NamedAddr::FriendTestModule {
     }
 }
 
-module NamedAddr::FriendHelper {
-    use NamedAddr::FriendTestModule;
-    
+module 0xbadbadbad::FriendHelper {
     public fun call_friend_function(): u64 {
-        FriendTestModule::friend_only_function()
+        0xbadbadbad::FriendTestModule::friend_only_function()
     }
 }
